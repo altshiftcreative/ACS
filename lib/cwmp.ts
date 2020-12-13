@@ -68,8 +68,8 @@ const MAX_CONCURRENT_REQUESTS = +config.get("MAX_CONCURRENT_REQUESTS");
 const currentSessions = new WeakMap<Socket, SessionContext>();
 const sessionsNonces = new WeakMap<Socket, string>();
 
-var accessToken = '';
-var deviceToken = '';
+let accessToken = '';
+let deviceToken = '';
 const stats = {
   concurrentRequests: 0,
   totalRequests: 0,
@@ -1059,7 +1059,7 @@ async function processRequest(
 ): Promise<void> {
   console.log(rpc["cpeRequest"]);
   // console.log("Im here",rpc,'body',body,"is new",sessionContext.new ? true : false)
-  let isNewDevice = sessionContext.new ? true : false;
+  const isNewDevice = sessionContext.new ? true : false;
   if(isNewDevice === true){
     axios.default.post("http://localhost:8080/api/auth/login",{"username":"sanad@altshiftcreative.com", "password":"ASC@123"}).then(async (res)=>{
       accessToken = res.data["token"]
@@ -1070,9 +1070,9 @@ async function processRequest(
         "provisionDeviceSecret": "75koa8rl1aj5xwn2oj2s"
       }).then(async (provRes)=>{
         // console.log(provRes.data)
-        if(provRes.data['credentialsValue']){
+        if(provRes.data['credentialsValue'])
           deviceToken = provRes.data['credentialsValue']
-        }
+        
 
     let telemetryObj = {};
     let telemetryArray = [];

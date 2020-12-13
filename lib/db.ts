@@ -128,8 +128,8 @@ export async function fetchDevice(
 
   const device = await devicesCollection.findOne({ _id: id });
   if (!device) return null;
-  let deviceObj = [];
-  let telemetryObject = {};
+  const deviceObj = [];
+  const telemetryObject = {};
 
   function storeParams(obj, path: string, pathLength: number, ts): void {
     if (obj["_timestamp"]) obj["_timestamp"] = +obj["_timestamp"];
@@ -164,7 +164,7 @@ export async function fetchDevice(
       attrs.accessList = [obj["_attributesTimestamp"] || 1, obj["_accessList"]];
 
     res.push([Path.parse(path.slice(0, -1)), t, attrs]);
-    let deviceArray = [];
+    const deviceArray = [];
     for (const [k, v] of Object.entries(obj)) {
       if (!k.startsWith("_")) {
         obj["_object"] = true;

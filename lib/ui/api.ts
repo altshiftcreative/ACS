@@ -98,7 +98,7 @@ router.get(`/devices/:id.csv`, async (ctx) => {
       .toISOString()
       .replace(/[:.]/g, "")}.csv`
   );
-
+ 
   ctx.body = new stream.PassThrough();
   ctx.body.write(
     "Parameter,Object,Object timestamp,Writable,Writable timestamp,Value,Value type,Value timestamp,Notification,Notification timestamp,Access list,Access list timestamp\n"

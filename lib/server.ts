@@ -23,6 +23,7 @@ import * as https from "https";
 import { Socket } from "net";
 import * as path from "path";
 import { ROOT_DIR } from "./config";
+import { list } from "postcss";
 
 let server: http.Server | https.Server;
 let listener: (...args) => void;
@@ -81,13 +82,16 @@ export function start(
     if (options.onConnection)
       server.on("secureConnection", options.onConnection);
   } else {
+    
     server = http.createServer(listener);
+    
     if (options.onConnection) server.on("connection", options.onConnection);
   }
-
+  
   server.timeout = options.timeout || 0;
   if (options.keepAliveTimeout != null)
     server.keepAliveTimeout = options.keepAliveTimeout;
+    
   server.listen({ port: options.port, host: options.host });
 }
 

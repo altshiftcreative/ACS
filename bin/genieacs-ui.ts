@@ -102,7 +102,21 @@ if (!cluster.worker) {
   });
 
   const _listener = (req, res): void => {
-    if (stopping) res.setHeader("Connection", "close");
+    if (stopping) {
+      res.setHeader("Connection", "close");
+    }
+    
+    res.setHeader("Access-Control-Allow-Origin","*");
+    res.setHeader("Access-Control-Allow-Methods","GET, POST, PATCH, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers","Origin, Content-Type, X-Auth-Token");
+    if (req.method === "OPTIONS") {
+      console.log("Options",req.headers)
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      res.writeHead(200)
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+  
     listener(req, res);
   };
 
