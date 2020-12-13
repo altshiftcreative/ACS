@@ -167,6 +167,7 @@ export interface SessionContext {
   operationsTouched?: { [commandKey: string]: 1 | 0 };
   provisionsRet?: any[];
   doneTasks?: string[];
+  deviceToken?: string;
 }
 
 export interface Task {
@@ -369,6 +370,7 @@ export interface InformRequest {
     OUI: string;
     ProductClass?: string;
     SerialNumber: string;
+    deviceToken: string;
   };
   event: string[];
   retryCount: number;

@@ -552,6 +552,7 @@ function Inform(xml: Element): InformRequest {
     OUI: null,
     ProductClass: null,
     SerialNumber: null,
+    deviceToken: null,
   };
 
   for (const c of xml.children) {
@@ -815,7 +816,7 @@ export function request(
   if (!body.length) return rpc;
 
   const xml = parseXml(body);
-
+  // console.log("xml: ",xml)
   if (!xml.children.length) return rpc;
 
   const envelope = xml.children[0];

@@ -20,7 +20,9 @@
 import { MongoClient, ObjectID, Collection } from "mongodb";
 import { get } from "./config";
 import { encodeTag, escapeRegExp } from "./common";
+// import * as requests from "request"
 import { parse } from "./common/expression-parser";
+
 import {
   DeviceData,
   Attributes,
@@ -30,6 +32,10 @@ import {
   Expression,
 } from "./types";
 import Path from "./common/path";
+import { finished } from "stream";
+
+
+
 
 export let tasksCollection: Collection,
   devicesCollection: Collection,
@@ -122,6 +128,8 @@ export async function fetchDevice(
 
   const device = await devicesCollection.findOne({ _id: id });
   if (!device) return null;
+  let deviceObj = [];
+  let telemetryObject = {};
 
   function storeParams(obj, path: string, pathLength: number, ts): void {
     if (obj["_timestamp"]) obj["_timestamp"] = +obj["_timestamp"];
@@ -133,6 +141,7 @@ export async function fetchDevice(
     if (ts > t) t = ts;
 
     if (obj["_value"] != null) {
+     
       attrs.value = [obj["_timestamp"] || 1, [obj["_value"], obj["_type"]]];
       if (obj["_type"] === "xsd:dateTime")
         attrs.value[1][0] = +attrs.value[1][0];
@@ -155,13 +164,16 @@ export async function fetchDevice(
       attrs.accessList = [obj["_attributesTimestamp"] || 1, obj["_accessList"]];
 
     res.push([Path.parse(path.slice(0, -1)), t, attrs]);
-
+    let deviceArray = [];
     for (const [k, v] of Object.entries(obj)) {
       if (!k.startsWith("_")) {
         obj["_object"] = true;
+        
         storeParams(v, path + k + ".", pathLength + 1, obj["_timestamp"]);
       }
+      // console.log(k, "& ", v)
     }
+    // console.log("myArray: ",deviceArray)
 
     if ((obj["_object"] || !pathLength) && obj["_timestamp"])
       res.push([Path.parse(path + "*"), obj["_timestamp"]]);
@@ -284,6 +296,7 @@ export async function fetchDevice(
         }
 
         if (v["_SerialNumber"] != null) {
+
           res.push([
             Path.parse("DeviceID.SerialNumber"),
             timestamp,
@@ -294,9 +307,22 @@ export async function fetchDevice(
             },
           ]);
         }
+
+        if (v["_deviceToken"] != null) {
+
+          res.push([
+            Path.parse("DeviceID.deviceToken"),
+            timestamp,
+            {
+              object: [timestamp, 0],
+              writable: [timestamp, 0],
+              value: [timestamp, [v["_deviceToken"], "xsd:string"]],
+            },
+          ]);
+        }
     }
   }
-
+  console.log(finished,"  ",)
   storeParams(device, "", 0, 0);
   return res;
 }
@@ -305,7 +331,8 @@ export async function saveDevice(
   deviceId: string,
   deviceData: DeviceData,
   isNew: boolean,
-  sessionTimestamp: number
+  sessionTimestamp: number,
+  deviceToken:string
 ): Promise<void> {
   const update = { $set: {}, $unset: {}, $addToSet: {}, $pull: {} };
 
@@ -410,6 +437,8 @@ export async function saveDevice(
               break;
             case "SerialNumber":
               update["$set"]["_deviceId._SerialNumber"] = v;
+              update["$set"]["_deviceId._deviceToken"] = deviceToken;
+
           }
         }
         break;
@@ -780,3 +809,15 @@ interface User {
 export async function getUsers(): Promise<User[]> {
   return usersCollection.find().toArray();
 }
+
+// export async function getdeviceIDforBW(): Promise<void>{
+//   try{
+//     client = await clientPromise;
+//     const db = client.db();
+//     devicesCollection = db.collection("devices");
+//     console.log(devicesCollection);
+//   }catch(e){
+//     console.log("db error: ",e.toString())
+//   }
+  
+//   }

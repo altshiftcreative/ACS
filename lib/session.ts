@@ -90,6 +90,7 @@ export function init(
     timestamp: timestamp,
     deviceId: deviceId,
     deviceData: initDeviceData(),
+    deviceToken : '',
     cwmpVersion: cwmpVersion,
     timeout: timeout,
     provisions: [],

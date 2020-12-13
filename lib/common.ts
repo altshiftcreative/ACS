@@ -18,7 +18,7 @@
  */
 
 export function generateDeviceId(
-  deviceIdStruct: Record<string, string>
+  deviceIdStruct: Record<string, string>,deviceToken: string
 ): string {
   // Escapes everything except alphanumerics and underscore
   function esc(str): string {
@@ -37,7 +37,7 @@ export function generateDeviceId(
       "-" +
       esc(deviceIdStruct["ProductClass"]) +
       "-" +
-      esc(deviceIdStruct["SerialNumber"])
+      esc(deviceIdStruct["SerialNumber"]) 
     );
   }
   return esc(deviceIdStruct["OUI"]) + "-" + esc(deviceIdStruct["SerialNumber"]);
