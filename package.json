@@ -20,7 +20,9 @@
     "tools": "tools"
   },
   "dependencies": {
+    "axios": "^0.21.0",
     "espresso-iisojs": "^1.0.3",
+    "express": "^4.17.1",
     "iconv-lite": "^0.6.2",
     "ipaddr.js": "^2.0.0",
     "jsonwebtoken": "^8.5.1",
@@ -32,8 +34,10 @@
     "koa-static": "^5.0.0",
     "later": "^1.2.0",
     "mongodb": "^3.6.2",
+    "morgan": "^1.10.0",
     "parsimmon": "^1.16.0",
     "seedrandom": "^3.0.5",
+    "superagent": "^6.1.0",
     "yaml": "^1.10.0"
   },
   "devDependencies": {

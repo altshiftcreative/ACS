@@ -33,7 +33,7 @@ import cssnano from "cssnano";
 import SVGO from "svgo";
 import * as xmlParser from "../lib/xml-parser";
 
-const MODE = process.env["NODE_ENV"] || "production";
+const MODE = process.env["NODE_ENV"] || "development";
 
 const BUILD_METADATA = new Date()
   .toISOString()
@@ -81,6 +81,7 @@ const externals = [
   "ipaddr.js",
   "jsbi",
   "espresso-iisojs",
+  "axios"
 ];
 
 function rmDirSync(dirPath): void {

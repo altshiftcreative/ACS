@@ -588,7 +588,7 @@ router.post("/devices/:id/tags", async (ctx) => {
 });
 
 router.get("/ping/:host", async (ctx) => {
-  return new Promise((resolve) => {
+  return new Promise<void>((resolve) => {
     ping(ctx.params.host, (err, parsed) => {
       if (parsed) {
         ctx.body = parsed;

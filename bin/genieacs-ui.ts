@@ -105,21 +105,21 @@ if (!cluster.worker) {
     if (stopping) {
       res.setHeader("Connection", "close");
     }
-    res.setHeader("Access-Control-Allow-Origin","http://localhost:4200");
-    res.setHeader("Access-Control-Allow-Methods","GET, POST, PATCH, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers","Origin, Content-Type, X-Auth-Token");
-    res.setHeader("Access-Control-Allow-Credentials","true");
-    res.setHeader("Access-Control-Expose-Headers","Set-Cookie");
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, Content-Type, X-Auth-Token");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Expose-Headers", "Set-Cookie");
 
-    
+
     if (req.method === "OPTIONS") {
-      console.log("Options",req.headers)
-      res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      console.log("Options", req.headers)
+      res.setHeader('Access-Control-Allow-Origin', "http://localhost:4200");
       res.writeHead(200)
     } else {
       res.setHeader('Access-Control-Allow-Origin', "http://localhost:4200");
     }
-  
+
     listener(req, res);
   };
 

@@ -34,6 +34,7 @@ import * as scheduling from "./scheduling";
 import Path from "./common/path";
 import * as extensions from "./extensions";
 import * as httpReq from "http"
+
 import * as axios from 'axios'
 
 import {
@@ -58,6 +59,7 @@ import * as debug from "./debug";
 import { getRequestOrigin } from "./forwarded";
 import { Chunk } from "webpack";
 
+
 const gzipPromisified = promisify(zlib.gzip);
 const deflatePromisified = promisify(zlib.deflate);
 
@@ -76,8 +78,11 @@ const stats = {
   droppedRequests: 0,
   initiatedSessions: 0,
 };
-// console.log("Started....")
+console.log("Starteeeeeeeeed....");
 //  db.getdeviceIDforBW()
+
+
+
 async function authenticate(
   sessionContext: SessionContext,
   body: string
@@ -94,7 +99,7 @@ async function authenticate(
     authentication = auth.parseAuthorizationHeader(
       sessionContext.httpRequest.headers["authorization"]
     );
-    console.log("auth:n",authentication);
+    console.log("auth:n", authentication);
   }
 
   if (authentication && authentication.method === "Digest") {
@@ -208,7 +213,7 @@ async function writeResponse(
   } else if (close) {
     const isNew = await endSession(sessionContext);
     if (isNew) {
-     
+
       logger.accessInfo({
         sessionContext: sessionContext,
         message: "New device registered",
@@ -298,7 +303,7 @@ async function inform(
   sessionContext: SessionContext,
   rpc: SoapMessage
 ): Promise<{ code: number; headers: Record<string, string>; data: string }> {
-  console.log("inform: ",rpc["parameterList"])
+  console.log("inform: ", rpc["parameterList"])
   const acsResponse = await session.inform(
     sessionContext,
     rpc.cpeRequest as InformRequest
@@ -748,11 +753,12 @@ async function endSession(sessionContext: SessionContext): Promise<boolean> {
       sessionContext.new,
       sessionContext.timestamp,
       deviceToken
-      
-      
+
+
     )
   );
 
+  
   if (sessionContext.operationsTouched) {
     for (const k of Object.keys(sessionContext.operationsTouched)) {
       saveCache = true;
@@ -914,7 +920,7 @@ export function onConnection(socket: Socket): void {
 
     if (sessionContext.state === 0) return;
     sessionContext.deviceToken = deviceToken;
-    
+
     const sessionContextString = await session.serialize(sessionContext);
     await cache.set(
       `session_${sessionContext.sessionId}`,
@@ -1058,76 +1064,88 @@ async function processRequest(
   body: string
 ): Promise<void> {
   console.log(rpc["cpeRequest"]);
+  logger.accessInfo({
+    sessionContext: sessionContext,
+    message: rpc["cpeRequest"],
+    rpc: rpc,
+  });
   // console.log("Im here",rpc,'body',body,"is new",sessionContext.new ? true : false)
   const isNewDevice = sessionContext.new ? true : false;
-  if(isNewDevice === true){
-    axios.default.post("http://localhost:8080/api/auth/login",{"username":"sanad@altshiftcreative.com", "password":"ASC@123"}).then(async (res)=>{
+  if (isNewDevice === true) {
+    axios.default.post("http://localhost:8080/api/auth/login", { "username": "obada@altshiftcreative.com", "password": "123456" }).then(async (res) => {
+      console.log("login response ---------",res);
+
+      logger.accessInfo({
+        sessionContext: sessionContext,
+        message: res,
+        rpc: rpc,
+      });
       accessToken = res.data["token"]
       // console.log(accessToken)
-      axios.default.post("http://localhost:8080/api/v1/provision",{
+      axios.default.post("http://localhost:8080/api/v1/provision", {
         "deviceName": sessionContext.deviceId,
-        "provisionDeviceKey": "hemi7jntdnmigr2qibc4",
-        "provisionDeviceSecret": "75koa8rl1aj5xwn2oj2s"
-      }).then(async (provRes)=>{
-        // console.log(provRes.data)
-        if(provRes.data['credentialsValue'])
+        "provisionDeviceKey": "acw420ezd0achrpwuf7s",
+        "provisionDeviceSecret": "kzr5py1zwd6c702ic3nk"
+      }).then(async (provRes) => {
+        console.log(provRes.data)
+        if (provRes.data['credentialsValue'])
           deviceToken = provRes.data['credentialsValue']
-        
 
-    let telemetryObj = {};
-    let telemetryArray = [];
-    if(rpc["cpeResponse"]){
-      if(rpc["cpeResponse"]["parameterList"]){
-        for( const val of rpc["cpeResponse"]["parameterList"]){
-            if(val[1]){
-             telemetryObj[val[0].toString()] = val[1]
-             telemetryArray.push(telemetryObj)
-      
+
+        let telemetryObj = {};
+        let telemetryArray = [];
+        if (rpc["cpeResponse"]) {
+          if (rpc["cpeResponse"]["parameterList"]) {
+            for (const val of rpc["cpeResponse"]["parameterList"]) {
+              if (val[1]) {
+                telemetryObj[val[0].toString()] = val[1]
+                telemetryArray.push(telemetryObj)
+
+              }
+              telemetryObj = {}
+
+              const req = httpReq.request({ host: "localhost", port: 8080, path: '/api/v1/' + deviceToken + '/telemetry', method: "POST" }, (res) => {
+                // console.log("HTTP Requested", req.path,"Data", telemetryArray)
+              })
+              // console.log(telemetryObject)
+              req.write(JSON.stringify(telemetryArray))
+              req.end()
+            }
+          }
         }
+        telemetryArray = [];
         telemetryObj = {}
-        
-        const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+deviceToken+'/telemetry',method: "POST"},(res)=>{
-          // console.log("HTTP Requested", req.path,"Data", telemetryArray)
-        })
-        // console.log(telemetryObject)
-        req.write(JSON.stringify(telemetryArray))
-        req.end()
-      }
-    }
-  }
-  telemetryArray = [];
-  telemetryObj = {}
-  if(rpc["cpeRequest"]){
-    if(rpc["cpeRequest"]["parameterList"]){
-      for( const val of rpc["cpeRequest"]["parameterList"]){
-        if(val[1]){
-         telemetryObj[val[0].toString()] = val[1]
-         telemetryArray.push(telemetryObj)
-  
-    }
-    telemetryObj = {}
-    
-    const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+deviceToken+'/telemetry',method: "POST"},(res)=>{
-      console.log("HTTP Requested", req.path,"Data", telemetryArray)
-    })
-    // console.log(telemetryObject)
-    req.write(JSON.stringify(telemetryArray))
-    req.end()
-  }
+        if (rpc["cpeRequest"]) {
+          if (rpc["cpeRequest"]["parameterList"]) {
+            for (const val of rpc["cpeRequest"]["parameterList"]) {
+              if (val[1]) {
+                telemetryObj[val[0].toString()] = val[1]
+                telemetryArray.push(telemetryObj)
 
-  }
-}
+              }
+              telemetryObj = {}
+
+              const req = httpReq.request({ host: "localhost", port: 8080, path: '/api/v1/' + deviceToken + '/telemetry', method: "POST" }, (res) => {
+                console.log("HTTP Requested", req.path, "Data", telemetryArray)
+              })
+              // console.log(telemetryObject)
+              req.write(JSON.stringify(telemetryArray))
+              req.end()
+            }
+
+          }
+        }
         for (const w of parseWarnings) {
           w.sessionContext = sessionContext;
           logger.accessWarn(w);
         }
-      
+
         if (sessionContext.state === 0) {
           if (!rpc.cpeRequest || rpc.cpeRequest.name !== "Inform")
             return reportBadState(sessionContext);
-      
+
           const res = await inform(sessionContext, rpc);
-      
+
           sessionContext.debug = !!localCache.getConfig(
             sessionContext.cacheSnapshot,
             "cwmp.debug",
@@ -1135,7 +1153,7 @@ async function processRequest(
             sessionContext.timestamp,
             (e) => session.configContextCallback(sessionContext, e)
           );
-      
+
           if (!sessionContext.timeout) {
             sessionContext.timeout = +localCache.getConfig(
               sessionContext.cacheSnapshot,
@@ -1145,9 +1163,9 @@ async function processRequest(
               (e) => session.configContextCallback(sessionContext, e)
             );
           }
-      
+
           sessionContext.httpRequest.socket.setTimeout(sessionContext.timeout * 1000);
-      
+
           if (sessionContext.debug) {
             debug.incomingHttpRequest(
               sessionContext.httpRequest,
@@ -1155,7 +1173,7 @@ async function processRequest(
               body
             );
           }
-      
+
           const authenticated = await authenticate(sessionContext, body);
           if (!authenticated) {
             if (!sessionContext.authState) {
@@ -1165,19 +1183,19 @@ async function processRequest(
               return responseUnauthorized(sessionContext, true);
             }
           }
-      
+
           sessionContext.state = 1;
           sessionContext.authState = 2;
-      
+
           logger.accessInfo({
             sessionContext: sessionContext,
             message: "Inform",
             rpc: rpc,
           });
-      
+
           return writeResponse(sessionContext, res);
         }
-      
+
         if (sessionContext.debug) {
           debug.incomingHttpRequest(
             sessionContext.httpRequest,
@@ -1185,7 +1203,7 @@ async function processRequest(
             body
           );
         }
-      
+
         // Reauthenticate in case of new connection
         if (sessionContext.authState !== 2) {
           const authenticated = await authenticate(sessionContext, body);
@@ -1199,11 +1217,11 @@ async function processRequest(
           }
           sessionContext.authState = 2;
         }
-      
+
         if (rpc.cpeRequest) {
           if (rpc.cpeRequest.name === "TransferComplete") {
             if (sessionContext.state !== 1) return reportBadState(sessionContext);
-      
+
             logger.accessInfo({
               sessionContext: sessionContext,
               message: "CPE request",
@@ -1212,7 +1230,7 @@ async function processRequest(
             return transferComplete(sessionContext, rpc);
           } else if (rpc.cpeRequest.name === "GetRPCMethods") {
             if (sessionContext.state !== 1) return reportBadState(sessionContext);
-      
+
             logger.accessInfo({
               sessionContext: sessionContext,
               message: "CPE request",
@@ -1230,23 +1248,23 @@ async function processRequest(
           } else {
             if (sessionContext.state !== 1 || rpc.cpeRequest.name === "Inform")
               return void reportBadState(sessionContext);
-      
+
             throw new Error("ACS method not supported");
           }
         } else if (rpc.cpeResponse) {
           if (sessionContext.state !== 2) return reportBadState(sessionContext);
-      
+
           await session.rpcResponse(sessionContext, rpc.id, rpc.cpeResponse);
           return nextRpc(sessionContext);
         } else if (rpc.cpeFault) {
           if (sessionContext.state !== 2) return reportBadState(sessionContext);
-      
+
           logger.accessWarn({
             sessionContext: sessionContext,
             message: "CPE fault",
             rpc: rpc,
           });
-      
+
           const fault = await session.rpcFault(sessionContext, rpc.id, rpc.cpeFault);
           if (fault) {
             recordFault(sessionContext, fault);
@@ -1256,16 +1274,16 @@ async function processRequest(
         } else {
           // CPE sent empty response
           if (sessionContext.state !== 1) return reportBadState(sessionContext);
-      
+
           sessionContext.state = 2;
           const { faults, operations } = await session.timeoutOperations(
             sessionContext
           );
-      
+
           for (const [i, f] of faults.entries()) {
             for (const [k, v] of Object.entries(operations[i].retries))
               sessionContext.retries[k] = v;
-      
+
             recordFault(
               sessionContext,
               f,
@@ -1273,7 +1291,7 @@ async function processRequest(
               operations[i].channels
             );
           }
-      
+
           return nextRpc(sessionContext);
         }
 
@@ -1282,28 +1300,28 @@ async function processRequest(
 
 
     })
-     
-      
-  
-    
-  
-   
-  
- 
-  }else{
-  const bwDeviceToken = sessionContext.deviceData.attributes.get(sessionContext.deviceData.paths.find(Path.parse("DeviceID.deviceToken"), false, true)[0]).value[1][0];
-  let telemetryObj = {};
+
+
+
+
+
+
+
+
+  } else {
+    const bwDeviceToken = sessionContext.deviceData.attributes.get(sessionContext.deviceData.paths.find(Path.parse("DeviceID.deviceToken"), false, true)[0]).value[1][0];
+    let telemetryObj = {};
     let telemetryArray = [];
-    if(rpc["cpeResponse"]){
-      if(rpc["cpeResponse"]["parameterList"]){
-        for( const val of rpc["cpeResponse"]["parameterList"]){
-            if(val[1]){
-             telemetryObj[val[0].toString()] = val[1]
-             telemetryArray.push(telemetryObj)
-            }
+    if (rpc["cpeResponse"]) {
+      if (rpc["cpeResponse"]["parameterList"]) {
+        for (const val of rpc["cpeResponse"]["parameterList"]) {
+          if (val[1]) {
+            telemetryObj[val[0].toString()] = val[1]
+            telemetryArray.push(telemetryObj)
+          }
         }
         telemetryObj = {}
-        const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+bwDeviceToken+'/telemetry',method: "POST"},(res)=>{
+        const req = httpReq.request({ host: "localhost", port: 8080, path: '/api/v1/' + bwDeviceToken + '/telemetry', method: "POST" }, (res) => {
           // console.log("HTTP Requested", req.path,"Data", telemetryArray)
         })
         // console.log(telemetryObject)
@@ -1313,56 +1331,86 @@ async function processRequest(
     }
     telemetryArray = [];
     telemetryObj = {}
-    if(rpc["cpeRequest"]){
-      if(rpc["cpeRequest"]["parameterList"]){
-        for( const val of rpc["cpeRequest"]["parameterList"]){
-          if(val[1]){
-           telemetryObj[val[0].toString()] = val[1]
-           telemetryArray.push(telemetryObj)
-    
+    if (rpc["cpeRequest"]) {
+      if (rpc["cpeRequest"]["parameterList"]) {
+        for (const val of rpc["cpeRequest"]["parameterList"]) {
+          if (val[1]) {
+            telemetryObj[val[0].toString()] = val[1]
+            telemetryArray.push(telemetryObj)
+
+          }
+          telemetryObj = {}
+
+          const req = httpReq.request({ host: "localhost", port: 8080, path: '/api/v1/' + bwDeviceToken + '/telemetry', method: "POST" }, (res) => {
+            console.log("HTTP Requested", req.path, "Data", telemetryArray)
+          })
+          // console.log(telemetryObject)
+          req.write(JSON.stringify(telemetryArray))
+          req.end()
+        }
+
       }
-      telemetryObj = {}
-      
-      const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+bwDeviceToken+'/telemetry',method: "POST"},(res)=>{
-        console.log("HTTP Requested", req.path,"Data", telemetryArray)
-      })
-      // console.log(telemetryObject)
-      req.write(JSON.stringify(telemetryArray))
-      req.end()
     }
-  
+    for (const w of parseWarnings) {
+      w.sessionContext = sessionContext;
+      logger.accessWarn(w);
     }
-  }
-  for (const w of parseWarnings) {
-    w.sessionContext = sessionContext;
-    logger.accessWarn(w);
-  }
 
-  if (sessionContext.state === 0) {
-    if (!rpc.cpeRequest || rpc.cpeRequest.name !== "Inform")
-      return reportBadState(sessionContext);
+    if (sessionContext.state === 0) {
+      if (!rpc.cpeRequest || rpc.cpeRequest.name !== "Inform")
+        return reportBadState(sessionContext);
 
-    const res = await inform(sessionContext, rpc);
+      const res = await inform(sessionContext, rpc);
 
-    sessionContext.debug = !!localCache.getConfig(
-      sessionContext.cacheSnapshot,
-      "cwmp.debug",
-      {},
-      sessionContext.timestamp,
-      (e) => session.configContextCallback(sessionContext, e)
-    );
-
-    if (!sessionContext.timeout) {
-      sessionContext.timeout = +localCache.getConfig(
+      sessionContext.debug = !!localCache.getConfig(
         sessionContext.cacheSnapshot,
-        "cwmp.sessionTimeout",
+        "cwmp.debug",
         {},
         sessionContext.timestamp,
         (e) => session.configContextCallback(sessionContext, e)
       );
-    }
 
-    sessionContext.httpRequest.socket.setTimeout(sessionContext.timeout * 1000);
+      if (!sessionContext.timeout) {
+        sessionContext.timeout = +localCache.getConfig(
+          sessionContext.cacheSnapshot,
+          "cwmp.sessionTimeout",
+          {},
+          sessionContext.timestamp,
+          (e) => session.configContextCallback(sessionContext, e)
+        );
+      }
+
+      sessionContext.httpRequest.socket.setTimeout(sessionContext.timeout * 1000);
+
+      if (sessionContext.debug) {
+        debug.incomingHttpRequest(
+          sessionContext.httpRequest,
+          sessionContext.deviceId,
+          body
+        );
+      }
+
+      const authenticated = await authenticate(sessionContext, body);
+      if (!authenticated) {
+        if (!sessionContext.authState) {
+          sessionContext.authState = 1;
+          return responseUnauthorized(sessionContext, false);
+        } else {
+          return responseUnauthorized(sessionContext, true);
+        }
+      }
+
+      sessionContext.state = 1;
+      sessionContext.authState = 2;
+
+      logger.accessInfo({
+        sessionContext: sessionContext,
+        message: "Inform",
+        rpc: rpc,
+      });
+
+      return writeResponse(sessionContext, res);
+    }
 
     if (sessionContext.debug) {
       debug.incomingHttpRequest(
@@ -1372,129 +1420,99 @@ async function processRequest(
       );
     }
 
-    const authenticated = await authenticate(sessionContext, body);
-    if (!authenticated) {
-      if (!sessionContext.authState) {
-        sessionContext.authState = 1;
-        return responseUnauthorized(sessionContext, false);
-      } else {
-        return responseUnauthorized(sessionContext, true);
+    // Reauthenticate in case of new connection
+    if (sessionContext.authState !== 2) {
+      const authenticated = await authenticate(sessionContext, body);
+      if (!authenticated) {
+        if (!sessionContext.authState) {
+          sessionContext.authState = 1;
+          return responseUnauthorized(sessionContext, false);
+        } else {
+          return responseUnauthorized(sessionContext, true);
+        }
       }
+      sessionContext.authState = 2;
     }
 
-    sessionContext.state = 1;
-    sessionContext.authState = 2;
+    if (rpc.cpeRequest) {
+      if (rpc.cpeRequest.name === "TransferComplete") {
+        if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-    logger.accessInfo({
-      sessionContext: sessionContext,
-      message: "Inform",
-      rpc: rpc,
-    });
+        logger.accessInfo({
+          sessionContext: sessionContext,
+          message: "CPE request",
+          rpc: rpc,
+        });
+        return transferComplete(sessionContext, rpc);
+      } else if (rpc.cpeRequest.name === "GetRPCMethods") {
+        if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-    return writeResponse(sessionContext, res);
-  }
-
-  if (sessionContext.debug) {
-    debug.incomingHttpRequest(
-      sessionContext.httpRequest,
-      sessionContext.deviceId,
-      body
-    );
-  }
-
-  // Reauthenticate in case of new connection
-  if (sessionContext.authState !== 2) {
-    const authenticated = await authenticate(sessionContext, body);
-    if (!authenticated) {
-      if (!sessionContext.authState) {
-        sessionContext.authState = 1;
-        return responseUnauthorized(sessionContext, false);
+        logger.accessInfo({
+          sessionContext: sessionContext,
+          message: "CPE request",
+          rpc: rpc,
+        });
+        const res = soap.response({
+          id: rpc.id,
+          acsResponse: {
+            name: "GetRPCMethodsResponse",
+            methodList: ["Inform", "GetRPCMethods", "TransferComplete"],
+          } as GetRPCMethodsResponse,
+          cwmpVersion: sessionContext.cwmpVersion,
+        });
+        return writeResponse(sessionContext, res);
       } else {
-        return responseUnauthorized(sessionContext, true);
+        if (sessionContext.state !== 1 || rpc.cpeRequest.name === "Inform")
+          return void reportBadState(sessionContext);
+
+        throw new Error("ACS method not supported");
       }
-    }
-    sessionContext.authState = 2;
-  }
+    } else if (rpc.cpeResponse) {
+      if (sessionContext.state !== 2) return reportBadState(sessionContext);
 
-  if (rpc.cpeRequest) {
-    if (rpc.cpeRequest.name === "TransferComplete") {
-      if (sessionContext.state !== 1) return reportBadState(sessionContext);
+      await session.rpcResponse(sessionContext, rpc.id, rpc.cpeResponse);
+      return nextRpc(sessionContext);
+    } else if (rpc.cpeFault) {
+      if (sessionContext.state !== 2) return reportBadState(sessionContext);
 
-      logger.accessInfo({
+      logger.accessWarn({
         sessionContext: sessionContext,
-        message: "CPE request",
+        message: "CPE fault",
         rpc: rpc,
       });
-      return transferComplete(sessionContext, rpc);
-    } else if (rpc.cpeRequest.name === "GetRPCMethods") {
-      if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-      logger.accessInfo({
-        sessionContext: sessionContext,
-        message: "CPE request",
-        rpc: rpc,
-      });
-      const res = soap.response({
-        id: rpc.id,
-        acsResponse: {
-          name: "GetRPCMethodsResponse",
-          methodList: ["Inform", "GetRPCMethods", "TransferComplete"],
-        } as GetRPCMethodsResponse,
-        cwmpVersion: sessionContext.cwmpVersion,
-      });
-      return writeResponse(sessionContext, res);
+      const fault = await session.rpcFault(sessionContext, rpc.id, rpc.cpeFault);
+      if (fault) {
+        recordFault(sessionContext, fault);
+        session.clearProvisions(sessionContext);
+      }
+      return nextRpc(sessionContext);
     } else {
-      if (sessionContext.state !== 1 || rpc.cpeRequest.name === "Inform")
-        return void reportBadState(sessionContext);
+      // CPE sent empty response
+      if (sessionContext.state !== 1) return reportBadState(sessionContext);
 
-      throw new Error("ACS method not supported");
-    }
-  } else if (rpc.cpeResponse) {
-    if (sessionContext.state !== 2) return reportBadState(sessionContext);
-
-    await session.rpcResponse(sessionContext, rpc.id, rpc.cpeResponse);
-    return nextRpc(sessionContext);
-  } else if (rpc.cpeFault) {
-    if (sessionContext.state !== 2) return reportBadState(sessionContext);
-
-    logger.accessWarn({
-      sessionContext: sessionContext,
-      message: "CPE fault",
-      rpc: rpc,
-    });
-
-    const fault = await session.rpcFault(sessionContext, rpc.id, rpc.cpeFault);
-    if (fault) {
-      recordFault(sessionContext, fault);
-      session.clearProvisions(sessionContext);
-    }
-    return nextRpc(sessionContext);
-  } else {
-    // CPE sent empty response
-    if (sessionContext.state !== 1) return reportBadState(sessionContext);
-
-    sessionContext.state = 2;
-    const { faults, operations } = await session.timeoutOperations(
-      sessionContext
-    );
-
-    for (const [i, f] of faults.entries()) {
-      for (const [k, v] of Object.entries(operations[i].retries))
-        sessionContext.retries[k] = v;
-
-      recordFault(
-        sessionContext,
-        f,
-        operations[i].provisions,
-        operations[i].channels
+      sessionContext.state = 2;
+      const { faults, operations } = await session.timeoutOperations(
+        sessionContext
       );
+
+      for (const [i, f] of faults.entries()) {
+        for (const [k, v] of Object.entries(operations[i].retries))
+          sessionContext.retries[k] = v;
+
+        recordFault(
+          sessionContext,
+          f,
+          operations[i].provisions,
+          operations[i].channels
+        );
+      }
+
+      return nextRpc(sessionContext);
     }
-
-    return nextRpc(sessionContext);
-  }
   }
 
-  
+
 
 }
 
@@ -1536,7 +1554,7 @@ async function listenerAsync(
   httpRequest: IncomingMessage,
   httpResponse: ServerResponse
 ): Promise<void> {
-  
+
   stats.totalRequests += 1;
 
   if (httpRequest.method !== "POST") {
@@ -1619,7 +1637,7 @@ async function listenerAsync(
   const sessionContext = await getSession(httpRequest.socket, sessionId);
 
   if (sessionContext) {
-   
+
     sessionContext.httpRequest = httpRequest;
     sessionContext.httpResponse = httpResponse;
     if (
@@ -1807,7 +1825,7 @@ async function listenerAsync(
   }
 
   stats.initiatedSessions += 1;
-  const deviceId = common.generateDeviceId(rpc.cpeRequest.deviceId,deviceToken);
+  const deviceId = common.generateDeviceId(rpc.cpeRequest.deviceId, deviceToken);
 
   const cacheSnapshot = await localCache.getCurrentSnapshot();
 
@@ -1854,30 +1872,29 @@ async function listenerAsync(
     _sessionContext.timestamp
   );
 
-  
+
   if (parameters) {
 
     for (const p of parameters) {
-      
+
       // console.log(p[2])
 
       const path = _sessionContext.deviceData.paths.add(p[0]);
       _sessionContext.deviceData.timestamps.set(path, p[1], 0);
-      if (p[2]) 
-      {
+      if (p[2]) {
         _sessionContext.deviceData.attributes.set(path, p[2], 0);
         // console.log("Me: ",_sessionContext.deviceData.attributes.get(path))
-        if(p[2]["value"] && (p[2]["value"] != undefined && (p[2]["value"] != null))) {
-         
+        if (p[2]["value"] && (p[2]["value"] != undefined && (p[2]["value"] != null))) {
+
         }
       }
     }
     // console.log(telemetryArray)
-   
+
   } else {
     // Device not available in database, mark as new
     _sessionContext.new = true;
-    
+
     // console.log("new device: ", );
   }
 
@@ -1886,19 +1903,19 @@ async function listenerAsync(
 
 
 
- function performRequest(Path:string, Data:any ,callback:any){
-   try{
-  axios.default.post('http://localhost:8080/'+ Path,Data).then(async (res)=>{
+function performRequest(Path: string, Data: any, callback: any) {
+  try {
+    axios.default.post('http://localhost:8080/' + Path, Data).then(async (res) => {
 
-  }).then((res)=>{
-    callback(null,res)
-  }).catch((e)=>{
-    callback(e,null)
-  })
-}catch(e){
-  console.log(e.toString())
-  callback(e,null)
-}
+    }).then((res) => {
+      callback(null, res)
+    }).catch((e) => {
+      callback(e, null)
+    })
+  } catch (e) {
+    console.log(e.toString())
+    callback(e, null)
+  }
 
 }
 
