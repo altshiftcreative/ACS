@@ -20,6 +20,7 @@
     "tools": "tools"
   },
   "dependencies": {
+    "axios": "^0.21.1",
     "espresso-iisojs": "^1.0.3",
     "iconv-lite": "^0.6.2",
     "ipaddr.js": "^2.0.0",
@@ -83,6 +84,11 @@
     "lint-prettier": "prettier --parser typescript --write \"bin/**/*.ts\" \"lib/**/*.ts\" \"ui/**/*.ts\" \"test/**/*.ts\" \"build/**/*.ts\" \"tools/**/*.ts\"",
     "lint-tsc": "tsc --noEmit",
     "lint": "npm run lint-eslint && npm run lint-prettier && npm run lint-tsc",
-    "build": "node -r esm -r ts-node/register/transpile-only build/build"
+    "build": "node -r esm -r ts-node/register/transpile-only build/build",
+    "docker-build": "docker build -t altshiftcreative/acs:latest .",
+    "docker-push": "docker push altshiftcreative/acs:latest",
+    "build-push": "npm run build && npm run docker-build && npm run docker-push",
+    "start-prod": "./bin/genieacs-cwmp & ./bin/genieacs-ui --ui-jwt-secret secret",
+    "start": "./dist/bin/genieacs-cwmp & ./dist/bin/genieacs-ui --ui-jwt-secret secret"
   }
 }

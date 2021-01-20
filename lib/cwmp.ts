@@ -67,6 +67,7 @@ const MAX_CONCURRENT_REQUESTS = +config.get("MAX_CONCURRENT_REQUESTS");
 
 const currentSessions = new WeakMap<Socket, SessionContext>();
 const sessionsNonces = new WeakMap<Socket, string>();
+const header = {headers:{"Content-Type" : "application/json"}};
 
 let accessToken = '';
 let deviceToken = '';
@@ -1061,13 +1062,13 @@ async function processRequest(
   // console.log("Im here",rpc,'body',body,"is new",sessionContext.new ? true : false)
   const isNewDevice = sessionContext.new ? true : false;
   if(isNewDevice === true){
-    axios.default.post("http://localhost:8080/api/auth/login",{"username":"sanad@altshiftcreative.com", "password":"ASC@123"}).then(async (res)=>{
+    axios.default.post(config.get("TB_BASE_URL") + "/auth/login",{"username": config.get("TB_USERNAME"), "password": config.get("TB_PASSWORD")}).then(async (res)=>{
       accessToken = res.data["token"]
       // console.log(accessToken)
-      axios.default.post("http://localhost:8080/api/v1/provision",{
+      axios.default.post(config.get("TB_BASE_URL") + "/v1/provision",{
         "deviceName": sessionContext.deviceId,
-        "provisionDeviceKey": "hemi7jntdnmigr2qibc4",
-        "provisionDeviceSecret": "75koa8rl1aj5xwn2oj2s"
+        "provisionDeviceKey": config.get("TB_PROVISION_DEVICE_KEY"),
+        "provisionDeviceSecret": config.get("TB_PROVISION_DEVICE_SECRET")
       }).then(async (provRes)=>{
         // console.log(provRes.data)
         if(provRes.data['credentialsValue'])
@@ -1086,10 +1087,8 @@ async function processRequest(
         }
         telemetryObj = {}
         
-        const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+deviceToken+'/telemetry',method: "POST"},(res)=>{
-          // console.log("HTTP Requested", req.path,"Data", telemetryArray)
+        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
         })
-        // console.log(telemetryObject)
         req.write(JSON.stringify(telemetryArray))
         req.end()
       }
@@ -1107,10 +1106,9 @@ async function processRequest(
     }
     telemetryObj = {}
     
-    const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+deviceToken+'/telemetry',method: "POST"},(res)=>{
+    const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
       console.log("HTTP Requested", req.path,"Data", telemetryArray)
     })
-    // console.log(telemetryObject)
     req.write(JSON.stringify(telemetryArray))
     req.end()
   }
@@ -1303,10 +1301,8 @@ async function processRequest(
             }
         }
         telemetryObj = {}
-        const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+bwDeviceToken+'/telemetry',method: "POST"},(res)=>{
-          // console.log("HTTP Requested", req.path,"Data", telemetryArray)
+        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
         })
-        // console.log(telemetryObject)
         req.write(JSON.stringify(telemetryArray))
         req.end()
       }
@@ -1323,10 +1319,9 @@ async function processRequest(
       }
       telemetryObj = {}
       
-      const req = httpReq.request({host:"localhost",port:8080,path:'/api/v1/'+bwDeviceToken+'/telemetry',method: "POST"},(res)=>{
+      const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
         console.log("HTTP Requested", req.path,"Data", telemetryArray)
       })
-      // console.log(telemetryObject)
       req.write(JSON.stringify(telemetryArray))
       req.end()
     }

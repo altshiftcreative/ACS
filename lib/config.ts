@@ -35,10 +35,17 @@ while (!existsSync(`${ROOT_DIR}/package.json`)) {
 let configDir, cwmpSsl, nbiSsl, fsSsl, uiSsl, fsHostname;
 
 const options = {
+  // Thingsboard properties
+  TB_BASE_URL: { type: "string", default: "http://localhost:8080/api" },
+  TB_USERNAME: { type: "string", default: "tenant@thingsboard.org" },
+  TB_PASSWORD: { type: "string", default: "tenant" },
+  TB_PROVISION_DEVICE_KEY: { type: "string", default: "hemi7jntdnmigr2qibc4" },
+  TB_PROVISION_DEVICE_SECRET: { type: "string", default: "75koa8rl1aj5xwn2oj2s" },
+
   EXT_DIR: { type: "path", default: resolve(ROOT_DIR, "config/ext") },
   MONGODB_CONNECTION_URL: {
     type: "string",
-    default: "mongodb://127.0.0.1/genieacs",
+    default: "mongodb://localhost:27017/genieacs",
   },
 
   CWMP_WORKER_PROCESSES: { type: "int", default: 0 },

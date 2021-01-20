@@ -32,6 +32,7 @@ import postcssPresetEnv from "postcss-preset-env";
 import cssnano from "cssnano";
 import SVGO from "svgo";
 import * as xmlParser from "../lib/xml-parser";
+import * as axios from "axios";
 
 const MODE = process.env["NODE_ENV"] || "production";
 
@@ -81,6 +82,7 @@ const externals = [
   "ipaddr.js",
   "jsbi",
   "espresso-iisojs",
+  "axios"
 ];
 
 function rmDirSync(dirPath): void {
@@ -148,6 +150,7 @@ async function init(): Promise<void> {
   packageJson["scripts"] = {
     install: packageJson["scripts"].install,
     configure: packageJson["scripts"].configure,
+    start: packageJson["scripts"]["start-prod"]
   };
   packageJson["version"] = `${packageJson["version"]}+${BUILD_METADATA}`;
   fs.writeFileSync(
