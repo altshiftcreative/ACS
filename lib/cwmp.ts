@@ -748,7 +748,7 @@ async function endSession(sessionContext: SessionContext): Promise<boolean> {
       sessionContext.deviceData,
       sessionContext.new,
       sessionContext.timestamp,
-      deviceToken
+      sessionContext.deviceToken
       
       
     )
@@ -1071,20 +1071,22 @@ async function processRequest(
         "provisionDeviceSecret": config.get("TB_PROVISION_DEVICE_SECRET")
       }).then(async (provRes)=>{
         // console.log(provRes.data)
-        if(provRes.data['credentialsValue'])
-          deviceToken = provRes.data['credentialsValue']
+        if(provRes.data['credentialsValue']){
+         deviceToken =  provRes.data['credentialsValue'];
+          sessionContext.deviceToken = deviceToken;
+        }
         
-
+    
     let telemetryObj = {};
     let telemetryArray = [];
     if(rpc["cpeResponse"]){
       if(rpc["cpeResponse"]["parameterList"]){
         for( const val of rpc["cpeResponse"]["parameterList"]){
-            if(val[1]){
+            if(val[1])
+            {
              telemetryObj[val[0].toString()] = val[1]
              telemetryArray.push(telemetryObj)
-      
-        }
+            }
         telemetryObj = {}
         
         const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
