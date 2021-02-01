@@ -45,8 +45,14 @@ declare module "koa" {
 const koa = new Koa();
 const router = new Router();
 
-const JWT_SECRET = "" + config.get("UI_JWT_SECRET");
+const JWT_SECRET = config.get("UI_JWT_SECRET") + "";
+const JWT_TOKEN_ISSUER = config.get("JWT_TOKEN_ISSUER") + "";
+
+// console.log('ISSUER:', JWT_TOKEN_ISSUER);
+// console.log('SECRET:', JWT_SECRET);
+
 const JWT_COOKIE = "genieacs-ui-jwt";
+// const X_AUTHORIZATION_HEADER = "X-Authorization";
 
 const getAuthorizer = memoize(
   (snapshot: string, rolesStr: string): Authorizer => {
@@ -75,9 +81,11 @@ koa.use(async (ctx, next) => {
 
 koa.use(
   koaJwt({
-    secret: JWT_SECRET,
+    algorithms: ["HS512"],
+    secret: Buffer.from(JWT_SECRET, 'base64'),
     passthrough: true,
     cookie: JWT_COOKIE,
+    issuer: JWT_TOKEN_ISSUER,
     isRevoked: async (ctx, token) => {
       if (token["authMethod"] === "local") {
         return !localCache.getUsers(ctx.state.configSnapshot)[
@@ -133,7 +141,7 @@ router.post("/login", async (ctx) => {
 
   function success(authMethod): void {
     log.method = authMethod;
-    const token = jwt.sign({ username, authMethod }, JWT_SECRET);
+    const token = jwt.sign({ username, authMethod }, Buffer.from(JWT_SECRET, 'base64'), { algorithm: 'HS512', issuer: JWT_TOKEN_ISSUER});
     ctx.cookies.set(JWT_COOKIE, token, { sameSite: "lax" });
     ctx.body = JSON.stringify(token);
     logger.accessInfo(log);
@@ -170,7 +178,7 @@ koa.use(async (ctx, next) => {
 });
 
 koa.use(koaBodyParser());
-router.use("/api", api.routes(), api.allowedMethods());
+router.use("/tr69/api", api.routes(), api.allowedMethods());
 
 router.get("/status", (ctx) => {
   ctx.body = "OK";

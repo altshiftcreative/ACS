@@ -36,16 +36,19 @@ let configDir, cwmpSsl, nbiSsl, fsSsl, uiSsl, fsHostname;
 
 const options = {
   // Thingsboard properties
-  TB_BASE_URL: { type: "string", default: "http://localhost:8080/api" },
+  TB_BASE_URL: { type: "string", default: "http://127.0.0.1:8080/api" },
   TB_USERNAME: { type: "string", default: "tenant@thingsboard.org" },
   TB_PASSWORD: { type: "string", default: "tenant" },
   TB_PROVISION_DEVICE_KEY: { type: "string", default: "hemi7jntdnmigr2qibc4" },
   TB_PROVISION_DEVICE_SECRET: { type: "string", default: "75koa8rl1aj5xwn2oj2s" },
+  UI_JWT_SECRET: { type: "string", default: "XNPEklRL6ipppDu4zmpZ5wAIcZH0TiKsiqdoylFpP48ap1lCJdiyh1SiFZe3Xbizhu91WiV3Jmbw+XGH5Mip8s6Yrl7N6jLCza0aZNstMDgNYa6eGpkjmpqvQUnqo62flpiUzCldVh5oTCFL9puA1yx0a2ZiRJRZ93PYS7hFIsc9P7OIp3oqJ3B/VB7GE+DKzCWDEWLPt/3b77klJ/MNw16gtIgASZUZXtPLyQ==" },
+  JWT_TOKEN_ISSUER: { type: "string", default: "www.bluewaves.com" },
+  // UI_SERVER_BASE_PATH: { type: "string", default: "tr69/api" },
 
   EXT_DIR: { type: "path", default: resolve(ROOT_DIR, "config/ext") },
   MONGODB_CONNECTION_URL: {
     type: "string",
-    default: "mongodb://localhost:27017/genieacs",
+    default: "mongodb://127.0.0.1/genieacs",
   },
 
   CWMP_WORKER_PROCESSES: { type: "int", default: 0 },
@@ -80,8 +83,7 @@ const options = {
   UI_SSL_KEY: { type: "string", default: "" },
   UI_LOG_FILE: { type: "path", default: "" },
   UI_ACCESS_LOG_FILE: { type: "path", default: "" },
-  UI_JWT_SECRET: { type: "string", default: "" },
-
+  
   UDP_CONNECTION_REQUEST_PORT: { type: "int", default: 0 },
   FORWARDED_HEADER: { type: "string", default: "" },
 

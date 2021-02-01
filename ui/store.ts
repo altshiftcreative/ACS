@@ -27,6 +27,7 @@ import { configSnapshot, genieacsVersion } from "./config";
 import { QueueTask } from "./task-queue";
 import { PingResult } from "../lib/ping";
 import { unionDiff, covers } from "../lib/common/boolean-expression";
+import config from "./config";
 
 const memoizedStringify = memoize(stringify);
 const memoizedEvaluate = memoize(evaluate);
@@ -381,7 +382,7 @@ function _fulfill(
             xhrRequest({
               method: "HEAD",
               url:
-                `api/${resourceType}/?` +
+                config.basePath + `/${resourceType}/?` +
                 m.buildQueryString({
                   filter: memoizedStringify(filter),
                 }),
@@ -437,7 +438,7 @@ function _fulfill(
               xhrRequest({
                 method: "GET",
                 url:
-                  `api/${resourceType}/?` +
+                  config.basePath + `/${resourceType}/?` +
                   m.buildQueryString({
                     filter: memoizedStringify(filter),
                     limit: 1,
@@ -528,7 +529,7 @@ function _fulfill(
               xhrRequest({
                 method: "GET",
                 url:
-                  `api/${resourceType}/?` +
+                  config.basePath + `/${resourceType}/?` +
                   m.buildQueryString({
                     filter: memoizedStringify(combinedFilterDiff),
                   }),
@@ -604,7 +605,7 @@ export function postTasks(
 
   return xhrRequest({
     method: "POST",
-    url: `api/devices/${encodeURIComponent(deviceId)}/tasks`,
+    url: config.basePath + `/devices/${encodeURIComponent(deviceId)}/tasks`,
     body: tasks,
     extract: (xhr) => {
       if (xhr.status === 403) throw new Error("Not authorized");
@@ -630,7 +631,7 @@ export function updateTags(
 ): Promise<void> {
   return xhrRequest({
     method: "POST",
-    url: `api/devices/${encodeURIComponent(deviceId)}/tags`,
+    url: config.basePath + `/devices/${encodeURIComponent(deviceId)}/tags`,
     body: tags,
   });
 }
@@ -641,7 +642,7 @@ export function deleteResource(
 ): Promise<void> {
   return xhrRequest({
     method: "DELETE",
-    url: `api/${resourceType}/${encodeURIComponent(id)}`,
+    url: config.basePath + `/${resourceType}/${encodeURIComponent(id)}`,
   });
 }
 
@@ -654,7 +655,7 @@ export function putResource(
 
   return xhrRequest({
     method: "PUT",
-    url: `api/${resourceType}/${encodeURIComponent(id)}`,
+    url: config.basePath + `/${resourceType}/${encodeURIComponent(id)}`,
     body: object,
   });
 }
@@ -663,7 +664,7 @@ export function queryConfig(pattern = "%"): Promise<any[]> {
   const filter = stringify(["LIKE", ["PARAM", "_id"], pattern]);
   return xhrRequest({
     method: "GET",
-    url: `api/config/?${m.buildQueryString({ filter: filter })}`,
+    url: config.basePath + `/config/?${m.buildQueryString({ filter: filter })}`,
     background: true,
   });
 }
@@ -674,7 +675,7 @@ export function resourceExists(resource: string, id: string): Promise<number> {
   return xhrRequest({
     method: "HEAD",
     url:
-      `api/${resource}/?` +
+      config.basePath + `/${resource}/?` +
       m.buildQueryString({
         filter: memoizedStringify(filter),
       }),
@@ -706,7 +707,7 @@ export function changePassword(
   if (authPassword) body["authPassword"] = authPassword;
   return xhrRequest({
     method: "PUT",
-    url: `api/users/${username}/password`,
+    url: config.basePath + `/users/${username}/password`,
     background: true,
     body,
   });
@@ -730,7 +731,7 @@ export function logOut(): Promise<void> {
 
 export function ping(host: string): Promise<PingResult> {
   return xhrRequest({
-    url: `api/ping/${encodeURIComponent(host)}`,
+    url: config.basePath + `/ping/${encodeURIComponent(host)}`,
     background: true,
   });
 }

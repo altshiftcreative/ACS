@@ -44,12 +44,13 @@ declare global {
     authorizer: Authorizer;
     permissionSets: PermissionSet[];
     username: string;
-    clientConfig: { ui: UiConfig };
+    clientConfig: { ui: UiConfig; basePath: string };
     configSnapshot: string;
     genieacsVersion: string;
   }
 }
 
+window.clientConfig.basePath = "tr69/api";
 window.authorizer = new Authorizer(window.permissionSets);
 
 const adminPages = [

@@ -23,6 +23,7 @@ import * as taskQueue from "../task-queue";
 import { parse } from "../../lib/common/expression-parser";
 import memoize from "../../lib/common/memoize";
 import { getIcon } from "../icons";
+import config from "../config";
 
 const memoizedParse = memoize(parse);
 
@@ -173,7 +174,7 @@ const component: ClosureComponent = (): Component => {
         m(
           "a.download-csv",
           {
-            href: `api/devices/${encodeURIComponent(
+            href: config.basePath + `/devices/${encodeURIComponent(
               device["DeviceID.ID"].value[0]
             )}.csv`,
             download: "",

@@ -69,7 +69,6 @@ const currentSessions = new WeakMap<Socket, SessionContext>();
 const sessionsNonces = new WeakMap<Socket, string>();
 const header = {headers:{"Content-Type" : "application/json"}};
 
-let accessToken = '';
 let deviceToken = '';
 const stats = {
   concurrentRequests: 0,
@@ -1063,7 +1062,7 @@ async function processRequest(
   const isNewDevice = sessionContext.new ? true : false;
   if(isNewDevice === true){
     axios.default.post(config.get("TB_BASE_URL") + "/auth/login",{"username": config.get("TB_USERNAME"), "password": config.get("TB_PASSWORD")}).then(async (res)=>{
-      accessToken = res.data["token"]
+      // accessToken = res.data["token"]
       // console.log(accessToken)
       axios.default.post(config.get("TB_BASE_URL") + "/v1/provision",{
         "deviceName": sessionContext.deviceId,
@@ -1089,7 +1088,7 @@ async function processRequest(
             }
         telemetryObj = {}
         
-        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
+        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+sessionContext.deviceToken+'/telemetry', {method: "POST"},(res)=>{
         })
         req.write(JSON.stringify(telemetryArray))
         req.end()
@@ -1108,8 +1107,8 @@ async function processRequest(
     }
     telemetryObj = {}
     
-    const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
-      console.log("HTTP Requested", req.path,"Data", telemetryArray)
+    const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+sessionContext.deviceToken+'/telemetry', {method: "POST"},(res)=>{
+      // console.log("HTTP Requested", req.path,"Data", telemetryArray)
     })
     req.write(JSON.stringify(telemetryArray))
     req.end()
@@ -1303,7 +1302,7 @@ async function processRequest(
             }
         }
         telemetryObj = {}
-        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
+        const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+sessionContext.deviceToken+'/telemetry', {method: "POST"},(res)=>{
         })
         req.write(JSON.stringify(telemetryArray))
         req.end()
@@ -1321,8 +1320,8 @@ async function processRequest(
       }
       telemetryObj = {}
       
-      const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+deviceToken+'/telemetry', {method: "POST"},(res)=>{
-        console.log("HTTP Requested", req.path,"Data", telemetryArray)
+      const req = httpReq.request(config.get("TB_BASE_URL") + '/v1/'+sessionContext.deviceToken+'/telemetry', {method: "POST"},(res)=>{
+        // console.log("HTTP Requested", req.path,"Data", telemetryArray)
       })
       req.write(JSON.stringify(telemetryArray))
       req.end()
